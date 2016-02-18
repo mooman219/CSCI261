@@ -1,12 +1,45 @@
+############
+# NetBeans specific
+############
+
+*/nbproject/
+*/nbbuild/
+*/build/
+*/dist/
+*/nbdist/
+manifest.mf
+build.xml
+nbbuild.xml
+nbactions.xml
+nb-configuration.xml
+
+############
+# Class Files
+############
+
 *.class
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+############
+# Package Files
+############
 
-# Package Files #
 *.jar
 *.war
 *.ear
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
+
+############
+## Windows
+############
+
+# Windows image file caches
+Thumbs.db
+
+# Folder config file
+Desktop.ini
+
+############
+## Mac
+############
+
+*.DS_STORE
