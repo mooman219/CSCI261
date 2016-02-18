@@ -111,8 +111,12 @@ public class MST {
                 result += "\nPredecessors:\n";
             }
             return result;
+        }
+    }
+}
 
-            /*
+
+/* Example output
 TEST: n=7, seed=100000, p=0.5
 Time to generate the graph: 4 milliseconds
 
@@ -146,7 +150,4 @@ Vertices:
  0 1 2 3 4 5 6
 Predecessors: 
 -1 4 3 0 3 1 5 
-             */
-        }
-    }
-}
+*/
