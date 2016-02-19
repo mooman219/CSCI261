@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.InputMismatchException;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -13,9 +14,24 @@ public class MST {
 
     public static void main(String[] args) {
         try {
-            Scanner reader = new Scanner(new File("input1"));
-            Graph graph = Graph.generate(reader.nextInt(), reader.nextInt(), reader.nextDouble());
+            Scanner reader = new Scanner(new File(args[0]));
+            int n = reader.nextInt();
+            int seed = reader.nextInt();
+            double p = reader.nextDouble();
+            if (n < 2) {
+                System.out.println("n must be greater than 1");
+                return;
+            } else if (!Double.isFinite(p)) {
+                System.out.println("p must be a real number");
+                return;
+            } else if (p < 0 || p > 1) {
+                System.out.println("p must be between 0 and 1");
+                return;
+            }
+            Graph graph = Graph.generate(n, seed, p);
             System.out.println(graph.toString());
+        } catch (InputMismatchException ex) {
+            System.out.println("n and seed must be integers");
         } catch (FileNotFoundException ex) {
             System.out.println("Input file not found");
         }
@@ -114,8 +130,8 @@ public class MST {
             Random randomB = new Random(seed * 2);
             int[][] matrix = new int[n][n];
             Node[] list = new Node[n];
-
             DFS search;
+
             long time = System.currentTimeMillis();
             do {
                 for (int i = 0; i < n; i++) {
@@ -133,6 +149,7 @@ public class MST {
                     }
                 }
                 search = DFS.search(list, 0);
+//                System.out.println("Reached: " + search.nodesReached + "/" + n);
             } while (search.nodesReached != n);
             time = System.currentTimeMillis() - time;
             return new Graph(n, seed, p, matrix, list, time, search);
@@ -168,40 +185,3 @@ public class MST {
         }
     }
 }
-
-
-/* Example output
-TEST: n=7, seed=100000, p=0.5
-Time to generate the graph: 4 milliseconds
-
-The graph as an adjacency matrix:
-
- 0   0   0   2   5   0   0  
-
- 0   0   0   0   2   4   5  
-
- 0   0   0   1   0   0   0  
-
- 2   0   1   0   4   7   0  
-
- 5   2   0   4   0   0   0  
-
- 0   4   0   7   0   0   5  
-
- 0   5   0   0   0   5   0 
-
-The graph as an adjacency list:
-0-> 3(2) 4(5) 
-1-> 4(2) 5(4) 6(5) 
-2-> 3(1) 
-3-> 0(2) 2(1) 4(4) 5(7) 
-4-> 0(5) 1(2) 3(4) 
-5-> 1(4) 3(7) 6(5) 
-6-> 1(5) 5(5) 
-            
-Depth-First Search:
-Vertices:  
- 0 1 2 3 4 5 6
-Predecessors: 
--1 4 3 0 3 1 5 
- */
