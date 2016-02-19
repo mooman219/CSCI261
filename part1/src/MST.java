@@ -1,6 +1,10 @@
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Scanner;
 
 /**
  * @author Joseph Cumbo (jwc6999)
@@ -8,7 +12,13 @@ import java.util.Random;
 public class MST {
 
     public static void main(String[] args) {
-        System.out.println(new Graph(7, 100000, 0.5).toString());
+        try {
+            Scanner reader = new Scanner(new File("input1"));
+            Graph graph = Graph.generate(reader.nextInt(), reader.nextInt(), reader.nextDouble());
+            System.out.println(graph.toString());
+        } catch (FileNotFoundException ex) {
+            System.out.println("Input file not found");
+        }
     }
 
     public static class Node {
@@ -48,43 +58,84 @@ public class MST {
         }
     }
 
+    public static class DFS {
+
+        public final int nodesReached;
+        public final Node[] predecessors;
+
+        private DFS(int nodesReached, Node[] predecessors) {
+            this.nodesReached = nodesReached;
+            this.predecessors = predecessors;
+        }
+
+        public static final DFS search(Node[] list, int initial) {
+            Node[] predcessors = new Node[list.length];
+            int nodesReached = search(null, list[0], predcessors, new HashSet<Node>());
+            return new DFS(nodesReached, predcessors);
+        }
+
+        private static final int search(Node previous, Node current, Node[] predcessors, HashSet<Node> seen) {
+            if (seen.contains(current)) {
+                return 0;
+            }
+            seen.add(current);
+            predcessors[current.id] = previous;
+            int count = 1;
+            for (Vertex vertex : current.vertices) {
+                count += search(current, vertex.target, predcessors, seen);
+            }
+            return count;
+        }
+
+    }
+
     public static class Graph {
 
         public final int n;
         public final int seed;
         public final double p;
-        private final int[][] matrix;
-        private final Node[] list;
-        private long generationTime;
+        public final int[][] matrix;
+        public final Node[] list;
+        public final long generationTime;
+        public final DFS search;
 
-        public Graph(int n, int seed, double p) {
+        private Graph(int n, int seed, double p, int[][] matrix, Node[] list, long generationTime, DFS search) {
             this.n = n;
             this.seed = seed;
             this.p = p;
-            this.matrix = new int[n][n];
-            this.list = new Node[n];
-            this.regenerate();
+            this.matrix = matrix;
+            this.list = list;
+            this.generationTime = generationTime;
+            this.search = search;
         }
 
-        public final void regenerate() {
+        public static Graph generate(int n, int seed, double p) {
             Random randomA = new Random(seed);
             Random randomB = new Random(seed * 2);
-            this.generationTime = System.currentTimeMillis();
-            for (int i = 0; i < n; i++) {
-                list[i] = new Node(i);
-            }
-            for (int x = 0; x < n; x++) {
-                for (int y = x + 1; y < n; y++) {
-                    if (randomA.nextDouble() <= p) {
-                        int weight = randomB.nextInt(n) + 1;
-                        matrix[x][y] = weight;
-                        matrix[y][x] = weight;
-                        list[x].addNeighbor(list[y], weight);
-                        list[y].addNeighbor(list[x], weight);
+            int[][] matrix = new int[n][n];
+            Node[] list = new Node[n];
+
+            DFS search;
+            long time = System.currentTimeMillis();
+            do {
+                for (int i = 0; i < n; i++) {
+                    list[i] = new Node(i);
+                }
+                for (int x = 0; x < n; x++) {
+                    for (int y = x + 1; y < n; y++) {
+                        if (randomA.nextDouble() <= p) {
+                            int weight = randomB.nextInt(n) + 1;
+                            matrix[x][y] = weight;
+                            matrix[y][x] = weight;
+                            list[x].addNeighbor(list[y], weight);
+                            list[y].addNeighbor(list[x], weight);
+                        }
                     }
                 }
-            }
-            this.generationTime = System.currentTimeMillis() - this.generationTime;
+                search = DFS.search(list, 0);
+            } while (search.nodesReached != n);
+            time = System.currentTimeMillis() - time;
+            return new Graph(n, seed, p, matrix, list, time, search);
         }
 
         @Override
@@ -109,6 +160,9 @@ public class MST {
                     result += " " + i;
                 }
                 result += "\nPredecessors:\n";
+                for (int i = 0; i < n; i++) {
+                    result += search.predecessors[i] == null ? "-1" : " " + search.predecessors[i].id;
+                }
             }
             return result;
         }
@@ -150,4 +204,4 @@ Vertices:
  0 1 2 3 4 5 6
 Predecessors: 
 -1 4 3 0 3 1 5 
-*/
+ */
