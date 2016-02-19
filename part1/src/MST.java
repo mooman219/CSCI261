@@ -14,7 +14,7 @@ public class MST {
 
     public static void main(String[] args) {
         try {
-            Scanner reader = new Scanner(new File(args[0]));
+            Scanner reader = new Scanner(new File("input2"));
             int n = reader.nextInt();
             int seed = reader.nextInt();
             double p = reader.nextDouble();
@@ -145,6 +145,9 @@ public class MST {
                             matrix[y][x] = weight;
                             list[x].addNeighbor(list[y], weight);
                             list[y].addNeighbor(list[x], weight);
+                        } else {
+                            matrix[x][y] = 0;
+                            matrix[y][x] = 0;
                         }
                     }
                 }
