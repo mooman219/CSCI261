@@ -13,8 +13,12 @@ import java.util.Scanner;
 public class MST {
 
     public static void main(String[] args) {
+        if (args.length < 1) {
+            System.out.println("Input file not found");
+            return;
+        }
         try {
-            Scanner reader = new Scanner(new File("input2"));
+            Scanner reader = new Scanner(new File(args[0]));
             int n = reader.nextInt();
             int seed = reader.nextInt();
             double p = reader.nextDouble();
@@ -152,7 +156,6 @@ public class MST {
                     }
                 }
                 search = DFS.search(list, 0);
-//                System.out.println("Reached: " + search.nodesReached + "/" + n);
             } while (search.nodesReached != n);
             time = System.currentTimeMillis() - time;
             return new Graph(n, seed, p, matrix, list, time, search);
