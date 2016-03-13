@@ -60,7 +60,6 @@ public class MST {
             for (Vertex vertex : vertices) {
                 result += vertex.target.id + "(" + vertex.weight + ") ";
             }
-            result += "\n";
             return result;
         }
     }
@@ -87,6 +86,11 @@ public class MST {
                 }
             }
             return result;
+        }
+
+        @Override
+        public String toString() {
+            return source.id + " " + target.id + " weight = " + weight;
         }
     }
 
@@ -117,6 +121,47 @@ public class MST {
                 count += search(current, vertex.target, predcessors, seen);
             }
             return count;
+        }
+
+    }
+
+    public static class EdgeSort {
+
+        public final Vertex[] sortedList;
+        public final EdgeSort.Type sortType;
+        public final int totalWeight;
+        public final long runtime;
+
+        public EdgeSort(Vertex[] sortedList, EdgeSort.Type sortType, int totalWeight, long runtime) {
+            this.sortedList = sortedList;
+            this.sortType = sortType;
+            this.totalWeight = totalWeight;
+            this.runtime = runtime;
+        }
+
+        public static enum Type {
+
+            INSERTION("INSERTION SORT"),
+            COUNT("COUNT SORT"),
+            QUICK("QUICKSORT");
+
+            public final String name;
+
+            private Type(String name) {
+                this.name = name;
+            }
+        }
+
+        @Override
+        public String toString() {
+            String result = "===================================\n";
+            result += "SORTED EDGES USING " + sortType.name + "\n";
+            for (int i = 0; i < sortedList.length; i++) {
+                result += sortedList[i].toString() + "\n";
+            }
+            result += "Total Weight = " + totalWeight + "\n";
+            result += "Runtime: " + runtime + "\n";
+            return result;
         }
 
     }
@@ -193,7 +238,7 @@ public class MST {
                 }
                 result += "The graph as an adjacency list:\n";
                 for (Node node : list) {
-                    result += node.toString();
+                    result += node.toString() + "\n";
                 }
                 result += "\nDepth-First Search:\n";
                 result += "Vertices:\n";
