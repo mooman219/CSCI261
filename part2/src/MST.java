@@ -65,16 +65,28 @@ public class MST {
         }
     }
 
-    public static class Vertex {
+    public static class Vertex implements Comparable<Vertex> {
 
         public final Node source;
-        public final int weight;
         public final Node target;
+        public final int weight;
 
         public Vertex(Node source, int weight, Node target) {
             this.source = source;
             this.weight = weight;
             this.target = target;
+        }
+
+        @Override
+        public int compareTo(Vertex o) {
+            int result = this.weight - o.weight;
+            if (result == 0) {
+                result = this.source.id - o.source.id;
+                if (result == 0) {
+                    result = this.target.id - o.target.id;
+                }
+            }
+            return result;
         }
     }
 
@@ -90,7 +102,7 @@ public class MST {
 
         public static final DFS search(Node[] list, int initial) {
             Node[] predcessors = new Node[list.length];
-            int nodesReached = search(null, list[0], predcessors, new HashSet<Node>());
+            int nodesReached = search(null, list[initial], predcessors, new HashSet<Node>());
             return new DFS(nodesReached, predcessors);
         }
 
@@ -138,6 +150,9 @@ public class MST {
 
             long time = System.currentTimeMillis();
             do {
+                /**
+                 * Generate the graph
+                 */
                 for (int i = 0; i < n; i++) {
                     list[i] = new Node(i);
                 }
@@ -154,6 +169,10 @@ public class MST {
                         }
                     }
                 }
+                /**
+                 * DFS to ensure it's connected, restarting the process if it
+                 * isn't.
+                 */
                 search = DFS.search(list, 0);
             } while (search.nodesReached != n);
             time = System.currentTimeMillis() - time;
