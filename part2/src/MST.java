@@ -34,9 +34,12 @@ public class MST {
             }
             Graph graph = Graph.generate(n, seed, p);
             System.out.println(graph.toString());
-            System.out.println(EdgeSortResult.doInsertionSort(graph).toString());
-            System.out.println(EdgeSortResult.doCountSort(graph).toString());
-            System.out.println(EdgeSortResult.doQuickSort(graph).toString());
+            System.out.println(EdgeSortResult.doInsertionSortMatrix(graph).toString());
+            System.out.println(EdgeSortResult.doCountSortMatrix(graph).toString());
+            System.out.println(EdgeSortResult.doQuickSortMatrix(graph).toString());
+            System.out.println(EdgeSortResult.doInsertionSortList(graph).toString());
+            System.out.println(EdgeSortResult.doCountSortList(graph).toString());
+            System.out.println(EdgeSortResult.doQuickSortList(graph).toString());
         } catch (InputMismatchException ex) {
             System.out.println("n and seed must be integers");
         } catch (FileNotFoundException ex) {
@@ -198,13 +201,28 @@ public class MST {
          * @param input the given graph.
          * @return the result of the sort.
          */
-        public static EdgeSortResult doInsertionSort(Graph input) {
+        public static EdgeSortResult doInsertionSortList(Graph input) {
             Edge[] sortedList = new Edge[input.edges.length];
             System.arraycopy(input.edges, 0, sortedList, 0, sortedList.length);
             long searchTime = System.currentTimeMillis();
             doInsertionSortInternal(sortedList);
             searchTime = System.currentTimeMillis() - searchTime;
-            return new EdgeSortResult(sortedList, Type.INSERTION, searchTime);
+            return new EdgeSortResult(sortedList, Type.INSERTION_LIST, searchTime);
+        }
+
+        /**
+         * Does an insertion sort on the given graph.
+         *
+         * @param input the given graph.
+         * @return the result of the sort.
+         */
+        public static EdgeSortResult doInsertionSortMatrix(Graph input) {
+            Edge[] sortedList = new Edge[input.edges.length];
+            System.arraycopy(input.edges, 0, sortedList, 0, sortedList.length);
+            long searchTime = System.currentTimeMillis();
+            doInsertionSortInternal(sortedList);
+            searchTime = System.currentTimeMillis() - searchTime;
+            return new EdgeSortResult(sortedList, Type.INSERTION_MATRIX, searchTime);
         }
 
         private static <T extends Comparable<T>> void doInsertionSortInternal(T[] list) {
@@ -220,11 +238,30 @@ public class MST {
             }
         }
 
-        public static EdgeSortResult doCountSort(Graph input) {
+        /**
+         * Does a count sort on the given graph.
+         *
+         * @param input the given graph.
+         * @return the result of the sort.
+         */
+        public static EdgeSortResult doCountSortList(Graph input) {
             long searchTime = System.currentTimeMillis();
             Edge[] sortedList = doCountSortInternal(input.edges);
             searchTime = System.currentTimeMillis() - searchTime;
-            return new EdgeSortResult(sortedList, Type.COUNT, searchTime);
+            return new EdgeSortResult(sortedList, Type.COUNT_LIST, searchTime);
+        }
+
+        /**
+         * Does a count sort on the given graph.
+         *
+         * @param input the given graph.
+         * @return the result of the sort.
+         */
+        public static EdgeSortResult doCountSortMatrix(Graph input) {
+            long searchTime = System.currentTimeMillis();
+            Edge[] sortedList = doCountSortInternal(input.edges);
+            searchTime = System.currentTimeMillis() - searchTime;
+            return new EdgeSortResult(sortedList, Type.COUNT_MATRIX, searchTime);
         }
 
         private static Edge[] doCountSortInternal(Edge[] list) {
@@ -247,13 +284,34 @@ public class MST {
             return b;
         }
 
-        public static EdgeSortResult doQuickSort(Graph input) {
+        /**
+         * Does an quicksort on the given graph.
+         *
+         * @param input the given graph.
+         * @return the result of the sort.
+         */
+        public static EdgeSortResult doQuickSortList(Graph input) {
             Edge[] sortedList = new Edge[input.edges.length];
             System.arraycopy(input.edges, 0, sortedList, 0, sortedList.length);
             long searchTime = System.currentTimeMillis();
             doQuickSortInternal(sortedList, 0, sortedList.length - 1);
             searchTime = System.currentTimeMillis() - searchTime;
-            return new EdgeSortResult(sortedList, Type.QUICK, searchTime);
+            return new EdgeSortResult(sortedList, Type.QUICK_LIST, searchTime);
+        }
+
+        /**
+         * Does an quicksort on the given graph.
+         *
+         * @param input the given graph.
+         * @return the result of the sort.
+         */
+        public static EdgeSortResult doQuickSortMatrix(Graph input) {
+            Edge[] sortedList = new Edge[input.edges.length];
+            System.arraycopy(input.edges, 0, sortedList, 0, sortedList.length);
+            long searchTime = System.currentTimeMillis();
+            doQuickSortInternal(sortedList, 0, sortedList.length - 1);
+            searchTime = System.currentTimeMillis() - searchTime;
+            return new EdgeSortResult(sortedList, Type.QUICK_MATRIX, searchTime);
         }
 
         private static <T extends Comparable<T>> void doQuickSortInternal(T[] list, int lowerIndex, int higherIndex) {
@@ -287,9 +345,11 @@ public class MST {
         @Override
         public String toString() {
             String result = "===================================\n";
-            result += "SORTED EDGES USING " + sortType.name + "\n";
-            for (int i = 0; i < sortedList.length; i++) {
-                result += sortedList[i].toString() + "\n";
+            result += "SORTED EDGES WITH " + sortType.input + " USING " + sortType.name + "\n";
+            if (sortedList.length <= 10) {
+                for (int i = 0; i < sortedList.length; i++) {
+                    result += sortedList[i].toString() + "\n";
+                }
             }
             result += "Total Weight = " + totalWeight + "\n";
             result += "Runtime: " + searchTime + " milliseconds\n";
@@ -298,13 +358,18 @@ public class MST {
 
         public static enum Type {
 
-            INSERTION("INSERTION SORT"),
-            COUNT("COUNT SORT"),
-            QUICK("QUICKSORT");
+            INSERTION_LIST("LIST", "INSERTION SORT"),
+            COUNT_LIST("LIST", "COUNT SORT"),
+            QUICK_LIST("LIST", "QUICKSORT"),
+            INSERTION_MATRIX("MATRIX", "INSERTION SORT"),
+            COUNT_MATRIX("MATRIX", "COUNT SORT"),
+            QUICK_MATRIX("MATRIX", "QUICKSORT");
 
+            public final String input;
             public final String name;
 
-            private Type(String name) {
+            private Type(String input, String name) {
+                this.input = input;
                 this.name = name;
             }
         }
