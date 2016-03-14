@@ -67,8 +67,17 @@ public class MST {
 
     public static class Edge implements Comparable<Edge> {
 
+        /**
+         * The source node of the edge.
+         */
         public final Node source;
+        /**
+         * The target node of the edge.
+         */
         public final Node target;
+        /**
+         * The weight of the edge.
+         */
         public final int weight;
 
         public Edge(Node source, Node target, int weight) {
@@ -97,14 +106,30 @@ public class MST {
 
     public static class DFSResult {
 
+        /**
+         * The number of nodes reached by the DFS during the search.
+         */
         public final int nodesReached;
+        /**
+         * The predecessors list of nodes. If the element is null, then that
+         * node does not have a predecessor.
+         */
         public final Node[] predecessors;
 
+        // Marked as private to encourage use of static construction method.
         private DFSResult(int nodesReached, Node[] predecessors) {
             this.nodesReached = nodesReached;
             this.predecessors = predecessors;
         }
 
+        /**
+         * Generates a DFS result based on the given adjacency list and starting
+         * node.
+         *
+         * @param list the adjacency list of nodes in the graph.
+         * @param initial the node index to start the search at.
+         * @return the result of the search.
+         */
         public static final DFSResult search(Node[] list, int initial) {
             Node[] predcessors = new Node[list.length];
             int nodesReached = search(null, list[initial], predcessors, new HashSet<Node>());
@@ -128,13 +153,24 @@ public class MST {
 
     public static class EdgeSortResult {
 
-        // Given variables
+        /**
+         * The sorted list of edges.
+         */
         public final Edge[] sortedList;
+        /**
+         * The sorting method used to sort the list.
+         */
         public final EdgeSortResult.Type sortType;
+        /**
+         * The time taken to sort the list.
+         */
         public final long searchTime;
-        // Computed variables
+        /**
+         * The total weight of the sorted edges.
+         */
         public final int totalWeight;
 
+        // Marked as private to encourage use of static construction method.
         private EdgeSortResult(Edge[] sortedList, Type sortType, long searchTime) {
             // Given variables
             this.sortedList = sortedList;
@@ -193,7 +229,7 @@ public class MST {
                 result += sortedList[i].toString() + "\n";
             }
             result += "Total Weight = " + totalWeight + "\n";
-            result += "Runtime: " + searchTime + "\n";
+            result += "Runtime: " + searchTime + " milliseconds\n";
             return result;
         }
 
@@ -201,42 +237,27 @@ public class MST {
 
     public static class Graph {
 
-        // Given variables
         public final int n;
         public final int seed;
         public final double p;
+        public final int totalWeight;
         public final long generationTime;
+        public final Edge[] edges;
         public final int[][] adjacencyMatrix;
         public final Node[] adjacencyList;
         public final DFSResult searchResult;
-        // Computed variables
-        public final Edge[] edges;
-        public final int totalWeight;
 
-        public Graph(int n, int seed, double p, long generationTime, int[][] adjacencyMatrix, Node[] adjacencyList, DFSResult searchResult) {
-            // Given variables
+        // Marked as private to encourage use of static construction method.
+        private Graph(int n, int seed, double p, int totalWeight, long generationTime, Edge[] edges, int[][] adjacencyMatrix, Node[] adjacencyList, DFSResult searchResult) {
             this.n = n;
             this.seed = seed;
             this.p = p;
+            this.totalWeight = totalWeight;
             this.generationTime = generationTime;
+            this.edges = edges;
             this.adjacencyMatrix = adjacencyMatrix;
             this.adjacencyList = adjacencyList;
             this.searchResult = searchResult;
-            // Computed variables
-            int edgeCount = 0;
-            int totalWeight = 0;
-            Edge[] edges = new Edge[((n * n) - n) / 2];
-            for (int x = 0; x < n; x++) {
-                for (int y = x + 1; y < n; y++) {
-                    totalWeight += adjacencyMatrix[x][y];
-                    if (adjacencyMatrix[x][y] != 0) {
-                        edges[edgeCount++] = new Edge(adjacencyList[x], adjacencyList[y], adjacencyMatrix[x][y]);
-                    }
-                }
-            }
-            this.edges = new Edge[edgeCount];
-            System.arraycopy(edges, 0, this.edges, 0, edgeCount);
-            this.totalWeight = totalWeight;
         }
 
         /**
@@ -253,12 +274,16 @@ public class MST {
             int[][] matrix = new int[n][n];
             Node[] list = new Node[n];
             DFSResult searchResult;
+            int edgeCount;
+            int totalWeight;
 
             long generationTime = System.currentTimeMillis();
             do {
                 /**
                  * Generate the graph
                  */
+                edgeCount = 0;
+                totalWeight = 0;
                 for (int i = 0; i < n; i++) {
                     list[i] = new Node(i);
                 }
@@ -268,10 +293,12 @@ public class MST {
                         matrix[y][x] = 0;
                         if (randomA.nextDouble() <= p) {
                             int weight = randomB.nextInt(n) + 1;
+                            totalWeight += weight;
                             matrix[x][y] = weight;
                             matrix[y][x] = weight;
                             list[x].addNeighbor(list[y], weight);
                             list[y].addNeighbor(list[x], weight);
+                            edgeCount++;
                         }
                     }
                 }
@@ -282,7 +309,19 @@ public class MST {
                 searchResult = DFSResult.search(list, 0);
             } while (searchResult.nodesReached != n);
             generationTime = System.currentTimeMillis() - generationTime;
-            return new Graph(n, seed, p, generationTime, matrix, list, searchResult);
+            /**
+             * Get the edges and total weight of the created graph
+             */
+            Edge[] edges = new Edge[edgeCount];
+            edgeCount = 0;
+            for (int x = 0; x < n; x++) {
+                for (int y = x + 1; y < n; y++) {
+                    if (matrix[x][y] != 0) {
+                        edges[edgeCount++] = new Edge(list[x], list[y], matrix[x][y]);
+                    }
+                }
+            }
+            return new Graph(n, seed, p, totalWeight, generationTime, edges, matrix, list, searchResult);
         }
 
         @Override
