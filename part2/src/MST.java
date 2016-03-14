@@ -34,6 +34,7 @@ public class MST {
             }
             Graph graph = Graph.generate(n, seed, p);
             System.out.println(graph.toString());
+            System.out.println(EdgeSortResult.doInsertionSort(graph).toString());
         } catch (InputMismatchException ex) {
             System.out.println("n and seed must be integers");
         } catch (FileNotFoundException ex) {
@@ -125,18 +126,50 @@ public class MST {
 
     }
 
-    public static class EdgeSort {
+    public static class EdgeSortResult {
 
+        // Given variables
         public final Edge[] sortedList;
-        public final EdgeSort.Type sortType;
-        public final int totalWeight;
+        public final EdgeSortResult.Type sortType;
         public final long searchTime;
+        // Computed variables
+        public final int totalWeight;
 
-        public EdgeSort(Edge[] sortedList, Type sortType, int totalWeight, long searchTime) {
+        private EdgeSortResult(Edge[] sortedList, Type sortType, long searchTime) {
+            // Given variables
             this.sortedList = sortedList;
             this.sortType = sortType;
-            this.totalWeight = totalWeight;
             this.searchTime = searchTime;
+            // Computed variables 
+            int totalWeight = 0;
+            for (int i = 0; i < sortedList.length; i++) {
+                totalWeight += sortedList[i].weight;
+            }
+            this.totalWeight = totalWeight;
+        }
+
+        /**
+         * Does an insertion sort on the given graph.
+         *
+         * @param input the given graph.
+         * @return the result of the sort.
+         */
+        public static EdgeSortResult doInsertionSort(Graph input) {
+            Edge[] sortedList = new Edge[input.edges.length];
+            System.arraycopy(input.edges, 0, sortedList, 0, sortedList.length);
+            long searchTime = System.currentTimeMillis();
+            Edge temp;
+            for (int i = 1; i < sortedList.length; i++) {
+                for (int j = i; j > 0; j--) {
+                    if (sortedList[j].compareTo(sortedList[j - 1]) < 0) {
+                        temp = sortedList[j];
+                        sortedList[j] = sortedList[j - 1];
+                        sortedList[j - 1] = temp;
+                    }
+                }
+            }
+            searchTime = System.currentTimeMillis() - searchTime;
+            return new EdgeSortResult(sortedList, Type.INSERTION, searchTime);
         }
 
         public static enum Type {
@@ -168,26 +201,52 @@ public class MST {
 
     public static class Graph {
 
+        // Given variables
         public final int n;
         public final int seed;
         public final double p;
-        public final int[][] adjacencyMatrix;
-        public final Edge[] edges;
-        public final Node[] adjacencyList;
         public final long generationTime;
+        public final int[][] adjacencyMatrix;
+        public final Node[] adjacencyList;
         public final DFSResult searchResult;
+        // Computed variables
+        public final Edge[] edges;
+        public final int totalWeight;
 
-        public Graph(int n, int seed, double p, int[][] adjacencyMatrix, Edge[] edges, Node[] adjacencyList, long generationTime, DFSResult searchResult) {
+        public Graph(int n, int seed, double p, long generationTime, int[][] adjacencyMatrix, Node[] adjacencyList, DFSResult searchResult) {
+            // Given variables
             this.n = n;
             this.seed = seed;
             this.p = p;
-            this.adjacencyMatrix = adjacencyMatrix;
-            this.edges = edges;
-            this.adjacencyList = adjacencyList;
             this.generationTime = generationTime;
+            this.adjacencyMatrix = adjacencyMatrix;
+            this.adjacencyList = adjacencyList;
             this.searchResult = searchResult;
+            // Computed variables
+            int edgeCount = 0;
+            int totalWeight = 0;
+            Edge[] edges = new Edge[((n * n) - n) / 2];
+            for (int x = 0; x < n; x++) {
+                for (int y = x + 1; y < n; y++) {
+                    totalWeight += adjacencyMatrix[x][y];
+                    if (adjacencyMatrix[x][y] != 0) {
+                        edges[edgeCount++] = new Edge(adjacencyList[x], adjacencyList[y], adjacencyMatrix[x][y]);
+                    }
+                }
+            }
+            this.edges = new Edge[edgeCount];
+            System.arraycopy(edges, 0, this.edges, 0, edgeCount);
+            this.totalWeight = totalWeight;
         }
 
+        /**
+         * Generates a graph based on the given parameters.
+         *
+         * @param n the length and width of the graph.
+         * @param seed the seed for the random.
+         * @param p the probability for an edge to be made between two nodes.
+         * @return the generated graph.
+         */
         public static Graph generate(int n, int seed, double p) {
             Random randomA = new Random(seed);
             Random randomB = new Random(seed * 2);
@@ -195,13 +254,11 @@ public class MST {
             Node[] list = new Node[n];
             DFSResult searchResult;
 
-            int edgeCount;
-            long time = System.currentTimeMillis();
+            long generationTime = System.currentTimeMillis();
             do {
                 /**
                  * Generate the graph
                  */
-                edgeCount = 0;
                 for (int i = 0; i < n; i++) {
                     list[i] = new Node(i);
                 }
@@ -215,7 +272,6 @@ public class MST {
                             matrix[y][x] = weight;
                             list[x].addNeighbor(list[y], weight);
                             list[y].addNeighbor(list[x], weight);
-                            edgeCount++;
                         }
                     }
                 }
@@ -225,20 +281,8 @@ public class MST {
                  */
                 searchResult = DFSResult.search(list, 0);
             } while (searchResult.nodesReached != n);
-            time = System.currentTimeMillis() - time;
-            /**
-             * Generate the edges for the lower half of the matrix
-             */
-            Edge[] edges = new Edge[edgeCount];
-            edgeCount = 0;
-            for (int x = 0; x < n; x++) {
-                for (int y = x + 1; y < n; y++) {
-                    if (matrix[x][y] != 0) {
-                        edges[edgeCount++] = new Edge(list[x], list[y], matrix[x][y]);
-                    }
-                }
-            }
-            return new Graph(n, seed, p, matrix, edges, list, time, searchResult);
+            generationTime = System.currentTimeMillis() - generationTime;
+            return new Graph(n, seed, p, generationTime, matrix, list, searchResult);
         }
 
         @Override
