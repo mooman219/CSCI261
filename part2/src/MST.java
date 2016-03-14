@@ -172,15 +172,17 @@ public class MST {
         public final int seed;
         public final double p;
         public final int[][] matrix;
+        public final Vertex[] edges;
         public final Node[] list;
         public final long generationTime;
         public final DFS search;
 
-        private Graph(int n, int seed, double p, int[][] matrix, Node[] list, long generationTime, DFS search) {
+        public Graph(int n, int seed, double p, int[][] matrix, Vertex[] edges, Node[] list, long generationTime, DFS search) {
             this.n = n;
             this.seed = seed;
             this.p = p;
             this.matrix = matrix;
+            this.edges = edges;
             this.list = list;
             this.generationTime = generationTime;
             this.search = search;
@@ -193,11 +195,13 @@ public class MST {
             Node[] list = new Node[n];
             DFS search;
 
+            int edgeCount;
             long time = System.currentTimeMillis();
             do {
                 /**
                  * Generate the graph
                  */
+                edgeCount = 0;
                 for (int i = 0; i < n; i++) {
                     list[i] = new Node(i);
                 }
@@ -211,6 +215,7 @@ public class MST {
                             matrix[y][x] = weight;
                             list[x].addNeighbor(list[y], weight);
                             list[y].addNeighbor(list[x], weight);
+                            edgeCount++;
                         }
                     }
                 }
@@ -221,7 +226,19 @@ public class MST {
                 search = DFS.search(list, 0);
             } while (search.nodesReached != n);
             time = System.currentTimeMillis() - time;
-            return new Graph(n, seed, p, matrix, list, time, search);
+            /**
+             * Generate the edges for the lower half of the matrix
+             */
+            Vertex[] edges = new Vertex[edgeCount];
+            edgeCount = 0;
+            for (int x = 0; x < n; x++) {
+                for (int y = x + 1; y < n; y++) {
+                    if(matrix[x][y] != 0) {
+                        edges[edgeCount++] = new Vertex(list[x], matrix[x][y], list[y]);
+                    }
+                }
+            }
+            return new Graph(n, seed, p, matrix, edges, list, time, search);
         }
 
         @Override
