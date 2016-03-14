@@ -35,6 +35,7 @@ public class MST {
             Graph graph = Graph.generate(n, seed, p);
             System.out.println(graph.toString());
             System.out.println(EdgeSortResult.doInsertionSort(graph).toString());
+            System.out.println(EdgeSortResult.doCountSort(graph).toString());
             System.out.println(EdgeSortResult.doQuickSort(graph).toString());
         } catch (InputMismatchException ex) {
             System.out.println("n and seed must be integers");
@@ -217,6 +218,33 @@ public class MST {
                     }
                 }
             }
+        }
+
+        public static EdgeSortResult doCountSort(Graph input) {
+            long searchTime = System.currentTimeMillis();
+            Edge[] sortedList = doCountSortInternal(input.edges);
+            searchTime = System.currentTimeMillis() - searchTime;
+            return new EdgeSortResult(sortedList, Type.COUNT, searchTime);
+        }
+
+        private static Edge[] doCountSortInternal(Edge[] list) {
+            int maxWeight = 0;
+            for (int i = 0; i < list.length; i++) {
+                maxWeight = maxWeight < list[i].weight ? list[i].weight : maxWeight;
+            }
+            maxWeight += 1;
+            int c[] = new int[maxWeight];
+            for (int i = 0; i < list.length; i++) {
+                c[list[i].weight]++;
+            }
+            for (int i = 1; i < maxWeight; i++) {
+                c[i] += c[i - 1];
+            }
+            Edge b[] = new Edge[list.length];
+            for (int i = list.length - 1; i >= 0; i--) {
+                b[--c[list[i].weight]] = list[i];
+            }
+            return b;
         }
 
         public static EdgeSortResult doQuickSort(Graph input) {
