@@ -35,6 +35,7 @@ public class MST {
             Graph graph = Graph.generate(n, seed, p);
             System.out.println(graph.toString());
             System.out.println(EdgeSortResult.doInsertionSort(graph).toString());
+            System.out.println(EdgeSortResult.doQuickSort(graph).toString());
         } catch (InputMismatchException ex) {
             System.out.println("n and seed must be integers");
         } catch (FileNotFoundException ex) {
@@ -44,7 +45,13 @@ public class MST {
 
     public static class Node {
 
+        /**
+         * The id of the node.
+         */
         public final int id;
+        /**
+         * The list of edges that can be followed from this node.
+         */
         public final ArrayList<Edge> edges = new ArrayList<Edge>();
 
         public Node(int id) {
@@ -194,30 +201,58 @@ public class MST {
             Edge[] sortedList = new Edge[input.edges.length];
             System.arraycopy(input.edges, 0, sortedList, 0, sortedList.length);
             long searchTime = System.currentTimeMillis();
-            Edge temp;
-            for (int i = 1; i < sortedList.length; i++) {
-                for (int j = i; j > 0; j--) {
-                    if (sortedList[j].compareTo(sortedList[j - 1]) < 0) {
-                        temp = sortedList[j];
-                        sortedList[j] = sortedList[j - 1];
-                        sortedList[j - 1] = temp;
-                    }
-                }
-            }
+            doInsertionSortInternal(sortedList);
             searchTime = System.currentTimeMillis() - searchTime;
             return new EdgeSortResult(sortedList, Type.INSERTION, searchTime);
         }
 
-        public static enum Type {
+        private static <T extends Comparable<T>> void doInsertionSortInternal(T[] list) {
+            T temp;
+            for (int i = 1; i < list.length; i++) {
+                for (int j = i; j > 0; j--) {
+                    if (list[j].compareTo(list[j - 1]) < 0) {
+                        temp = list[j];
+                        list[j] = list[j - 1];
+                        list[j - 1] = temp;
+                    }
+                }
+            }
+        }
 
-            INSERTION("INSERTION SORT"),
-            COUNT("COUNT SORT"),
-            QUICK("QUICKSORT");
+        public static EdgeSortResult doQuickSort(Graph input) {
+            Edge[] sortedList = new Edge[input.edges.length];
+            System.arraycopy(input.edges, 0, sortedList, 0, sortedList.length);
+            long searchTime = System.currentTimeMillis();
+            doQuickSortInternal(sortedList, 0, sortedList.length - 1);
+            searchTime = System.currentTimeMillis() - searchTime;
+            return new EdgeSortResult(sortedList, Type.QUICK, searchTime);
+        }
 
-            public final String name;
-
-            private Type(String name) {
-                this.name = name;
+        private static <T extends Comparable<T>> void doQuickSortInternal(T[] list, int lowerIndex, int higherIndex) {
+            int i = lowerIndex;
+            int j = higherIndex;
+            T temp;
+            T pivot = list[lowerIndex + (higherIndex - lowerIndex) / 2];
+            while (i <= j) {
+                while (list[i].compareTo(pivot) < 0) {
+                    i++;
+                }
+                while (list[j].compareTo(pivot) > 0) {
+                    j--;
+                }
+                if (i <= j) {
+                    temp = list[i];
+                    list[i] = list[j];
+                    list[j] = temp;
+                    i++;
+                    j--;
+                }
+            }
+            if (lowerIndex < j) {
+                doQuickSortInternal(list, lowerIndex, j);
+            }
+            if (i < higherIndex) {
+                doQuickSortInternal(list, i, higherIndex);
             }
         }
 
@@ -231,6 +266,19 @@ public class MST {
             result += "Total Weight = " + totalWeight + "\n";
             result += "Runtime: " + searchTime + " milliseconds\n";
             return result;
+        }
+
+        public static enum Type {
+
+            INSERTION("INSERTION SORT"),
+            COUNT("COUNT SORT"),
+            QUICK("QUICKSORT");
+
+            public final String name;
+
+            private Type(String name) {
+                this.name = name;
+            }
         }
 
     }
