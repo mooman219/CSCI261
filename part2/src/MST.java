@@ -44,40 +44,40 @@ public class MST {
     public static class Node {
 
         public final int id;
-        public final ArrayList<Vertex> vertices = new ArrayList<Vertex>();
+        public final ArrayList<Edge> edges = new ArrayList<Edge>();
 
         public Node(int id) {
             this.id = id;
         }
 
         public void addNeighbor(Node target, int weight) {
-            vertices.add(new Vertex(this, weight, target));
+            edges.add(new Edge(this, target, weight));
         }
 
         @Override
         public String toString() {
             String result = id + "-> ";
-            for (Vertex vertex : vertices) {
+            for (Edge vertex : edges) {
                 result += vertex.target.id + "(" + vertex.weight + ") ";
             }
             return result;
         }
     }
 
-    public static class Vertex implements Comparable<Vertex> {
+    public static class Edge implements Comparable<Edge> {
 
         public final Node source;
         public final Node target;
         public final int weight;
 
-        public Vertex(Node source, int weight, Node target) {
+        public Edge(Node source, Node target, int weight) {
             this.source = source;
-            this.weight = weight;
             this.target = target;
+            this.weight = weight;
         }
 
         @Override
-        public int compareTo(Vertex o) {
+        public int compareTo(Edge o) {
             int result = this.weight - o.weight;
             if (result == 0) {
                 result = this.source.id - o.source.id;
@@ -94,20 +94,20 @@ public class MST {
         }
     }
 
-    public static class DFS {
+    public static class DFSResult {
 
         public final int nodesReached;
         public final Node[] predecessors;
 
-        private DFS(int nodesReached, Node[] predecessors) {
+        private DFSResult(int nodesReached, Node[] predecessors) {
             this.nodesReached = nodesReached;
             this.predecessors = predecessors;
         }
 
-        public static final DFS search(Node[] list, int initial) {
+        public static final DFSResult search(Node[] list, int initial) {
             Node[] predcessors = new Node[list.length];
             int nodesReached = search(null, list[initial], predcessors, new HashSet<Node>());
-            return new DFS(nodesReached, predcessors);
+            return new DFSResult(nodesReached, predcessors);
         }
 
         private static final int search(Node previous, Node current, Node[] predcessors, HashSet<Node> seen) {
@@ -117,7 +117,7 @@ public class MST {
             seen.add(current);
             predcessors[current.id] = previous;
             int count = 1;
-            for (Vertex vertex : current.vertices) {
+            for (Edge vertex : current.edges) {
                 count += search(current, vertex.target, predcessors, seen);
             }
             return count;
@@ -127,16 +127,16 @@ public class MST {
 
     public static class EdgeSort {
 
-        public final Vertex[] sortedList;
+        public final Edge[] sortedList;
         public final EdgeSort.Type sortType;
         public final int totalWeight;
-        public final long runtime;
+        public final long searchTime;
 
-        public EdgeSort(Vertex[] sortedList, EdgeSort.Type sortType, int totalWeight, long runtime) {
+        public EdgeSort(Edge[] sortedList, Type sortType, int totalWeight, long searchTime) {
             this.sortedList = sortedList;
             this.sortType = sortType;
             this.totalWeight = totalWeight;
-            this.runtime = runtime;
+            this.searchTime = searchTime;
         }
 
         public static enum Type {
@@ -160,7 +160,7 @@ public class MST {
                 result += sortedList[i].toString() + "\n";
             }
             result += "Total Weight = " + totalWeight + "\n";
-            result += "Runtime: " + runtime + "\n";
+            result += "Runtime: " + searchTime + "\n";
             return result;
         }
 
@@ -171,21 +171,21 @@ public class MST {
         public final int n;
         public final int seed;
         public final double p;
-        public final int[][] matrix;
-        public final Vertex[] edges;
-        public final Node[] list;
+        public final int[][] adjacencyMatrix;
+        public final Edge[] edges;
+        public final Node[] adjacencyList;
         public final long generationTime;
-        public final DFS search;
+        public final DFSResult searchResult;
 
-        public Graph(int n, int seed, double p, int[][] matrix, Vertex[] edges, Node[] list, long generationTime, DFS search) {
+        public Graph(int n, int seed, double p, int[][] adjacencyMatrix, Edge[] edges, Node[] adjacencyList, long generationTime, DFSResult searchResult) {
             this.n = n;
             this.seed = seed;
             this.p = p;
-            this.matrix = matrix;
+            this.adjacencyMatrix = adjacencyMatrix;
             this.edges = edges;
-            this.list = list;
+            this.adjacencyList = adjacencyList;
             this.generationTime = generationTime;
-            this.search = search;
+            this.searchResult = searchResult;
         }
 
         public static Graph generate(int n, int seed, double p) {
@@ -193,7 +193,7 @@ public class MST {
             Random randomB = new Random(seed * 2);
             int[][] matrix = new int[n][n];
             Node[] list = new Node[n];
-            DFS search;
+            DFSResult searchResult;
 
             int edgeCount;
             long time = System.currentTimeMillis();
@@ -223,22 +223,22 @@ public class MST {
                  * DFS to ensure it's connected, restarting the process if it
                  * isn't.
                  */
-                search = DFS.search(list, 0);
-            } while (search.nodesReached != n);
+                searchResult = DFSResult.search(list, 0);
+            } while (searchResult.nodesReached != n);
             time = System.currentTimeMillis() - time;
             /**
              * Generate the edges for the lower half of the matrix
              */
-            Vertex[] edges = new Vertex[edgeCount];
+            Edge[] edges = new Edge[edgeCount];
             edgeCount = 0;
             for (int x = 0; x < n; x++) {
                 for (int y = x + 1; y < n; y++) {
-                    if(matrix[x][y] != 0) {
-                        edges[edgeCount++] = new Vertex(list[x], matrix[x][y], list[y]);
+                    if (matrix[x][y] != 0) {
+                        edges[edgeCount++] = new Edge(list[x], list[y], matrix[x][y]);
                     }
                 }
             }
-            return new Graph(n, seed, p, matrix, edges, list, time, search);
+            return new Graph(n, seed, p, matrix, edges, list, time, searchResult);
         }
 
         @Override
@@ -249,12 +249,12 @@ public class MST {
                 result += "The graph as an adjacency matrix:\n\n";
                 for (int x = 0; x < n; x++) {
                     for (int y = 0; y < n; y++) {
-                        result += " " + matrix[x][y] + "  ";
+                        result += " " + adjacencyMatrix[x][y] + "  ";
                     }
                     result += "\n\n";
                 }
                 result += "The graph as an adjacency list:\n";
-                for (Node node : list) {
+                for (Node node : adjacencyList) {
                     result += node.toString() + "\n";
                 }
                 result += "\nDepth-First Search:\n";
@@ -264,7 +264,7 @@ public class MST {
                 }
                 result += "\nPredecessors:\n";
                 for (int i = 0; i < n; i++) {
-                    result += search.predecessors[i] == null ? "-1" : " " + search.predecessors[i].id;
+                    result += searchResult.predecessors[i] == null ? "-1" : " " + searchResult.predecessors[i].id;
                 }
             }
             return result;
